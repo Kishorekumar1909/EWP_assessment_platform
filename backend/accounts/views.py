@@ -76,12 +76,7 @@ class SignupView(APIView):
             password = serializer.validated_data['password']
             username = serializer.validated_data.get('username', '')
 
-            otp_record = OTP.objects.filter(email=email, purpose='signup', is_verified=True).first()
-            if not otp_record:
-                return Response({'error': 'Email not verified.'}, status=status.HTTP_400_BAD_REQUEST)
-
             user = CustomUser.objects.create_user(email=email, password=password, username=username)
-            otp_record.delete()  # Clean up
 
             # Optional: auto login, but let's encourage them to login
             return Response({'message': 'User registered successfully.'}, status=status.HTTP_201_CREATED)
@@ -96,6 +91,7 @@ class LoginView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
         user = authenticate(email=email, password=password)
+        # print(user)
 
         if user:
             refresh = RefreshToken.for_user(user)
@@ -109,7 +105,7 @@ class LoginView(APIView):
             response.set_cookie(
                 key=settings.SIMPLE_JWT['AUTH_COOKIE'],
                 value=str(refresh.access_token),
-                expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                max_age=int(settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds()),
                 secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
                 httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
                 samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
@@ -117,7 +113,7 @@ class LoginView(APIView):
             response.set_cookie(
                 key='refresh_token',
                 value=str(refresh),
-                expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+                max_age=int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds()),
                 secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
                 httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
                 samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
@@ -147,15 +143,15 @@ class ResetPasswordView(APIView):
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
 
-            otp_record = OTP.objects.filter(email=email, purpose='forgot_password', is_verified=True).first()
-            if not otp_record:
-                return Response({'error': 'Email not verified.'}, status=status.HTTP_400_BAD_REQUEST)
+            # otp_record = OTP.objects.filter(email=email, purpose='forgot_password', is_verified=True).first()
+            # if not otp_record:
+            #     return Response({'error': 'Email not verified.'}, status=status.HTTP_400_BAD_REQUEST)
             
             user = CustomUser.objects.filter(email=email).first()
             if user:
                 user.set_password(password)
                 user.save()
-                otp_record.delete()
+                # otp_record.delete()
                 return Response({'message': 'Password reset successful.'})
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 

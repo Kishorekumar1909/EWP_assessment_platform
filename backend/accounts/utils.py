@@ -6,6 +6,7 @@ from .models import OTP
 def generate_otp():
     return str(random.randint(100000, 999999))
 
+
 def send_otp_email(email, otp, purpose):
     subject = "EWP Email Verification"
     if purpose == 'signup':

@@ -72,11 +72,7 @@ export default function Login() {
                         <input type="password" required className="input-field" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
                     </div>
 
-                    <div style={{ marginTop: '-0.5rem', marginBottom: '0.75rem' }} className="flex justify-end">
-                        <Link to="/forgot-password" style={{ color: 'var(--accent-blue)', fontSize: '0.875rem', fontWeight: 500 }} className="hover:underline">
-                            Forgot password?
-                        </Link>
-                    </div>
+
 
                     <button type="submit" className="btn-primary mt-1">Sign In</button>
                 </form>
