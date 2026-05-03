@@ -115,7 +115,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_COOKIE': 'access_token',
     'AUTH_COOKIE_HTTP_ONLY': True,
-    'AUTH_COOKIE_SAMESITE': 'Lax',
+    'AUTH_COOKIE_SAMESITE': 'None' if not DEBUG else 'Lax',
     'AUTH_COOKIE_SECURE': not DEBUG, # False in dev True in prod
 }
 
