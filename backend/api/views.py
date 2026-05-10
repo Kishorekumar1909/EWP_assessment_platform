@@ -109,6 +109,9 @@ class JSONUploadView(views.APIView):
                 test_name = f"Articulation Test {start_order + i}"
                 test = Test.objects.create(domain=domain, name=test_name, order=start_order + i)
                 
+                chunk_questions = []
+                chunk_v_data = []
+
                 for q_data in chunk:
                     count += 1
                     q = q_data
@@ -118,22 +121,32 @@ class JSONUploadView(views.APIView):
                         return Response(serializer.errors, status=400)
                     
                     v_data = serializer.validated_data
-                    question = Question.objects.create(
-                        test=test,
-                        text=v_data['question'],
-                        is_multiple_choice=v_data['check_box']
+                    chunk_v_data.append(v_data)
+                    chunk_questions.append(
+                        Question(
+                            test=test,
+                            text=v_data['question'],
+                            is_multiple_choice=v_data['check_box']
+                        )
                     )
-                    
-                    
+                
+                created_questions = Question.objects.bulk_create(chunk_questions)
+                
+                chunk_options = []
+                for idx, question in enumerate(created_questions):
+                    v_data = chunk_v_data[idx]
                     clean_answers = [str(ans).strip().rstrip('.') for ans in v_data['answer']]
                     for opt_text in v_data['options']:
                         clean_opt = str(opt_text).strip().rstrip('.')
                         is_corr = clean_opt in clean_answers
-                        Option.objects.create(
-                            question=question,
-                            text=opt_text,
-                            is_correct=is_corr
+                        chunk_options.append(
+                            Option(
+                                question=question,
+                                text=opt_text,
+                                is_correct=is_corr
+                            )
                         )
+                Option.objects.bulk_create(chunk_options)
             
             return Response({'message': f'Successfully uploaded {len(data_list)} questions into {len(questions_chunked)} tests.'}, status=201)
         except Exception as e:
